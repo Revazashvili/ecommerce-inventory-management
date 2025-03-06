@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	pgxh "github.com/Revazashvili/ecommerce-inventory-management/internal"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"time"
@@ -66,13 +67,11 @@ func NewProductStorage(p *pgxpool.Pool) ProductStorage {
 }
 
 func (pps *PostgresProductStorage) Add(ctx context.Context, product Product) (Product, error) {
-	conn, err := pps.pool.Acquire(ctx)
-	if err != nil {
-		return Product{}, err
-	}
-	defer conn.Release()
-
-	_, err = conn.Exec(ctx, "insert into products.products (id, name) values ($1, $2)", product.Id, product.Name)
+	err := pgxh.ExecStmt(pps.pool, pgxh.Stmt{
+		Ctx:  ctx,
+		Sql:  "insert into products.products (id, name) values ($1, $2)",
+		Args: []any{product.Id, product.Name},
+	})
 
 	if err != nil {
 		return Product{}, err
@@ -82,14 +81,11 @@ func (pps *PostgresProductStorage) Add(ctx context.Context, product Product) (Pr
 }
 
 func (pps *PostgresProductStorage) Update(ctx context.Context, product Product) (Product, error) {
-	conn, err := pps.pool.Acquire(ctx)
-	if err != nil {
-		return Product{}, err
-	}
-	defer conn.Release()
-
-	_, err = conn.Exec(ctx, "update products.products set name=$1 where id=$2", product.Name, product.Id)
-
+	err := pgxh.ExecStmt(pps.pool, pgxh.Stmt{
+		Ctx:  ctx,
+		Sql:  "update products.products set name=$1 where id=$2",
+		Args: []any{product.Name, product.Id},
+	})
 	if err != nil {
 		return Product{}, err
 	}
@@ -98,13 +94,11 @@ func (pps *PostgresProductStorage) Update(ctx context.Context, product Product) 
 }
 
 func (pps *PostgresProductStorage) Remove(ctx context.Context, id uuid.UUID) error {
-	conn, err := pps.pool.Acquire(ctx)
-	if err != nil {
-		return err
-	}
-	defer conn.Release()
-
-	_, err = conn.Exec(ctx, "delete from products.products where id=$1", id)
+	err := pgxh.ExecStmt(pps.pool, pgxh.Stmt{
+		Ctx:  ctx,
+		Sql:  "delete from products.products where id=$1",
+		Args: []any{id},
+	})
 
 	if err != nil {
 		return err
