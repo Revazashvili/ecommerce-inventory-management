@@ -1,9 +1,10 @@
-package products
+package product
 
 import (
     "context"
-    pgxh "github.com/Revazashvili/ecommerce-inventory-management/internal"
+	pgxh "github.com/Revazashvili/ecommerce-inventory-management/internal"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -15,6 +16,25 @@ func NewProductStorage(p *pgxpool.Pool) ProductStorage {
 	return &PostgresProductStorage{
 		pool: p,
 	}
+}
+
+func (pps *PostgresProductStorage) Search(ctx context.Context, name string) ([]Product, error) {
+	products, err := pgxh.ExecQuery(pps.pool, pgxh.QueryStmt[Product]{
+		Ctx: ctx,
+		Sql: "select id, name from products.products where name ilike $1",
+		Args: []any{ "%" + name + "%" },
+		Fn: func(row pgx.CollectableRow) (Product, error) {
+			var p Product
+			err := row.Scan(&p.Id, &p.Name)
+			return p, err
+		},
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return products, nil
 }
 
 func (pps *PostgresProductStorage) Add(ctx context.Context, product Product) (Product, error) {

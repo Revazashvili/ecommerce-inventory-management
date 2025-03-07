@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/Revazashvili/ecommerce-inventory-management/products"
+	"github.com/Revazashvili/ecommerce-inventory-management/product"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"time"
@@ -19,8 +19,8 @@ func main() {
 		fmt.Println(err)
 	}
 
-	storage := products.NewProductStorage(pool)
-	p := products.Product{
+	storage := product.NewProductStorage(pool)
+	p := product.Product{
 		Id:   uuid.New(),
 		Name: "test",
 	}
@@ -43,4 +43,12 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
+
+	products, err := storage.Search(ctx, "update")
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println(products)
 }
