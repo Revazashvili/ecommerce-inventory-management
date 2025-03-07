@@ -28,14 +28,7 @@ func ExecStmt(pool *pgxpool.Pool, stmt Stmt) error {
 	return nil
 }
 
-type QueryStmt[T any] struct {
-	Ctx context.Context
-	Sql string
-	Args []any
-	Fn pgx.RowToFunc[T]
-}
-
-func ExecQuery[T any](pool *pgxpool.Pool, stmt QueryStmt[T]) ([]T, error) {
+func ExecQueryStructs[T any](pool *pgxpool.Pool, stmt Stmt) ([]T, error) {
 	conn, err := pool.Acquire(stmt.Ctx)
 	if err != nil {
 		return nil, err
@@ -48,11 +41,10 @@ func ExecQuery[T any](pool *pgxpool.Pool, stmt QueryStmt[T]) ([]T, error) {
 		return nil, err
 	}
 
-	products, err := pgx.CollectRows(rows, stmt.Fn)
+	result, err := pgx.CollectRows(rows, pgx.RowToStructByName[T])
 	if err != nil {
 		return nil, err
 	}
 
-	return products, nil
+	return result, nil
 }
-
