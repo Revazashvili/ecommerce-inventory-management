@@ -32,6 +32,21 @@ func (pps *postgresStorage) Search(ctx context.Context, name string) ([]Product,
 	return products, nil
 }
 
+func (pps *postgresStorage) Count(ctx context.Context, name string) (int, error) {
+	var count int
+	count, err := pgxh.ExecQueryOne[int](pps.pool, pgxh.Stmt{
+		Ctx:  ctx,
+		Sql:  "select count(*) from products.products where name ilike $1",
+		Args: []any{"%" + name + "%"},
+	})
+
+	if err != nil {
+		return count, err
+	}
+
+	return count, nil
+}
+
 func (pps *postgresStorage) Add(ctx context.Context, product Product) (Product, error) {
 	err := pgxh.ExecStmt(pps.pool, pgxh.Stmt{
 		Ctx:  ctx,
