@@ -30,7 +30,8 @@ func ProductRoutes() chi.Router {
 
 func getHandler(s product.Storage) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		products, err := s.Search(r.Context(), chi.URLParam(r, "name"))
+		name := r.URL.Query().Get("name")
+		products, err := s.Search(r.Context(), name)
 
 		if err != nil {
 			http.Error(w, "Internal error happend", http.StatusInternalServerError)
