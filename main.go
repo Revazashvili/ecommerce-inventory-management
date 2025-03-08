@@ -1,54 +1,25 @@
 package main
 
 import (
-	"context"
-	"fmt"
-	"github.com/Revazashvili/ecommerce-inventory-management/product"
-	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgxpool"
-	"time"
+	"log"
+	"net/http"
+
+	"github.com/Revazashvili/ecommerce-inventory-management/handlers"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
-const dbURL = "postgres://user:pass@localhost:5432/products"
-
 func main() {
+	r := chi.NewRouter()
 
-	ctx := context.Background()
-	pool, err := pgxpool.New(ctx, dbURL)
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
+
+	r.Mount("/api/product", handlers.ProductRoutes())
+	// r.Mount("/api/product", ProductRoutes())
+
+	err := http.ListenAndServe(":8080", r)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 	}
-
-	storage := product.NewProductStorage(pool)
-	p := product.Product{
-		Id:   uuid.New(),
-		Name: "test",
-	}
-	p, err = storage.Add(ctx, p)
-
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	p.Name = "test updated"
-	p, err = storage.Update(ctx, p)
-
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	time.Sleep(time.Second * 5)
-	err = storage.Remove(ctx, p.Id)
-
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	products, err := storage.Search(ctx, "update")
-
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	fmt.Println(products)
 }
