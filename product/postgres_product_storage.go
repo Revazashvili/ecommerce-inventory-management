@@ -1,27 +1,28 @@
 package product
 
 import (
-    "context"
+	"context"
+
 	pgxh "github.com/Revazashvili/ecommerce-inventory-management/internal"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type PostgresProductStorage struct {
+type postgresStorage struct {
 	pool *pgxpool.Pool
 }
 
-func NewProductStorage(p *pgxpool.Pool) ProductStorage {
-	return &PostgresProductStorage{
+func NewStorage(p *pgxpool.Pool) Storage {
+	return &postgresStorage{
 		pool: p,
 	}
 }
 
-func (pps *PostgresProductStorage) Search(ctx context.Context, name string) ([]Product, error) {
+func (pps *postgresStorage) Search(ctx context.Context, name string) ([]Product, error) {
 	products, err := pgxh.ExecQueryStructs[Product](pps.pool, pgxh.Stmt{
-		Ctx: ctx,
-		Sql: "select id, name from products.products where name ilike $1",
-		Args: []any{ "%" + name + "%" },
+		Ctx:  ctx,
+		Sql:  "select id, name from products.products where name ilike $1",
+		Args: []any{"%" + name + "%"},
 	})
 
 	if err != nil {
@@ -31,7 +32,7 @@ func (pps *PostgresProductStorage) Search(ctx context.Context, name string) ([]P
 	return products, nil
 }
 
-func (pps *PostgresProductStorage) Add(ctx context.Context, product Product) (Product, error) {
+func (pps *postgresStorage) Add(ctx context.Context, product Product) (Product, error) {
 	err := pgxh.ExecStmt(pps.pool, pgxh.Stmt{
 		Ctx:  ctx,
 		Sql:  "insert into products.products (id, name) values ($1, $2)",
@@ -45,7 +46,7 @@ func (pps *PostgresProductStorage) Add(ctx context.Context, product Product) (Pr
 	return product, nil
 }
 
-func (pps *PostgresProductStorage) Update(ctx context.Context, product Product) (Product, error) {
+func (pps *postgresStorage) Update(ctx context.Context, product Product) (Product, error) {
 	err := pgxh.ExecStmt(pps.pool, pgxh.Stmt{
 		Ctx:  ctx,
 		Sql:  "update products.products set name=$1 where id=$2",
@@ -58,7 +59,7 @@ func (pps *PostgresProductStorage) Update(ctx context.Context, product Product) 
 	return product, nil
 }
 
-func (pps *PostgresProductStorage) Remove(ctx context.Context, id uuid.UUID) error {
+func (pps *postgresStorage) Remove(ctx context.Context, id uuid.UUID) error {
 	err := pgxh.ExecStmt(pps.pool, pgxh.Stmt{
 		Ctx:  ctx,
 		Sql:  "delete from products.products where id=$1",

@@ -16,7 +16,6 @@ func main() {
 	r.Use(middleware.Logger)
 
 	r.Mount("/api/product", handlers.ProductRoutes())
-	// r.Mount("/api/product", ProductRoutes())
 
 	err := http.ListenAndServe(":8080", r)
 	if err != nil {

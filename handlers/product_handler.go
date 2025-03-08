@@ -21,14 +21,14 @@ func ProductRoutes() chi.Router {
 		log.Println(err)
 	}
 
-	storage := product.NewProductStorage(pool)
+	storage := product.NewStorage(pool)
 
 	r := chi.NewRouter()
 	r.Get("/", getHandler(storage))
 	return r
 }
 
-func getHandler(s product.ProductStorage) func(http.ResponseWriter, *http.Request) {
+func getHandler(s product.Storage) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		products, err := s.Search(r.Context(), chi.URLParam(r, "name"))
 
