@@ -1,28 +1,14 @@
 package handlers
 
 import (
-	"context"
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/Revazashvili/ecommerce-inventory-management/product"
 	"github.com/go-chi/chi/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-const dbURL = "postgres://user:pass@localhost:5432/products"
-
-func ProductRoutes() chi.Router {
-	ctx := context.Background()
-	pool, err := pgxpool.New(ctx, dbURL)
-
-	if err != nil {
-		log.Println(err)
-	}
-
-	storage := product.NewStorage(pool)
-
+func ProductRoutes(storage product.Storage) chi.Router {
 	r := chi.NewRouter()
 	r.Get("/", getHandler(storage))
 	r.Get("/count", getCountHandler(storage))
