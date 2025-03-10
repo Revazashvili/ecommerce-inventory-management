@@ -36,5 +36,5 @@ type StockReservation struct {
 	OrderNumber uuid.UUID
 	Quantity    int
 	CreateDate  time.Time
-	CancelDate  time.Time
+	CancelDate  *time.Time
 }

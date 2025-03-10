@@ -36,7 +36,7 @@ func (ps *postgresStorage) GetStock(ctx context.Context, productID uuid.UUID) (S
 func (ps *postgresStorage) StockReservationExists(ctx context.Context, orderNumber uuid.UUID) (bool, error) {
 	c, err := pgxh.ExecQueryOne[int](ps.pool, pgxh.Stmt{
 		Ctx:  ctx,
-		Sql:  "select count(*) from products.stock_reservations where order_number=$1;",
+		Sql:  "select count(*) from products.stock_reservations where order_number=$1 and cancel_date is null;",
 		Args: []any{orderNumber},
 	})
 
