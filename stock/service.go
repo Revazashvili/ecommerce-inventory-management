@@ -19,7 +19,18 @@ func NewService(storage Storage) *Service {
 }
 
 func (ss *Service) Reserve(ctx context.Context, productID uuid.UUID, quantity int, orderNumber uuid.UUID) error {
-	s, err := ss.storage.Get(ctx, productID)
+
+	sre, err := ss.storage.StockReservationExists(ctx, orderNumber)
+
+	if err != nil {
+		return err
+	}
+
+	if sre {
+		return errors.New("reservation for order number already exists")
+	}
+
+	s, err := ss.storage.GetStock(ctx, productID)
 
 	if err != nil {
 		return err

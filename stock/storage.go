@@ -7,7 +7,8 @@ import (
 )
 
 type Storage interface {
-	Get(ctx context.Context, productID uuid.UUID) (Stock, error)
+	GetStock(ctx context.Context, productID uuid.UUID) (Stock, error)
+	StockReservationExists(ctx context.Context, orderNumber uuid.UUID) (bool, error)
 	ReserveStock(ctx context.Context, s Stock) (Stock, error)
 	AddStockReservation(ctx context.Context, sr StockReservation) (StockReservation, error)
 }

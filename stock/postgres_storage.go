@@ -18,7 +18,7 @@ func NewStockStorage(p *pgxpool.Pool) Storage {
 	}
 }
 
-func (ps *postgresStorage) Get(ctx context.Context, productID uuid.UUID) (Stock, error) {
+func (ps *postgresStorage) GetStock(ctx context.Context, productID uuid.UUID) (Stock, error) {
 	var s Stock
 	s, err := pgxh.ExecQueryOneStruct[Stock](ps.pool, pgxh.Stmt{
 		Ctx:  ctx,
@@ -31,6 +31,22 @@ func (ps *postgresStorage) Get(ctx context.Context, productID uuid.UUID) (Stock,
 	}
 
 	return s, nil
+}
+
+func (ps *postgresStorage) StockReservationExists(ctx context.Context, orderNumber uuid.UUID) (bool, error) {
+	c, err := pgxh.ExecQueryOne[int](ps.pool, pgxh.Stmt{
+		Ctx:  ctx,
+		Sql:  "select count(*) from products.stock_reservations where order_number=$1;",
+		Args: []any{orderNumber},
+	})
+
+	e := c > 0
+
+	if err != nil {
+		return e, err
+	}
+
+	return e, nil
 }
 
 func (ps *postgresStorage) ReserveStock(ctx context.Context, s Stock) (Stock, error) {
