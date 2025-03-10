@@ -8,6 +8,7 @@ import (
 	"github.com/Revazashvili/ecommerce-inventory-management/consumers"
 	"github.com/Revazashvili/ecommerce-inventory-management/handlers"
 	"github.com/Revazashvili/ecommerce-inventory-management/product"
+	"github.com/Revazashvili/ecommerce-inventory-management/stock"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -24,16 +25,19 @@ func main() {
 		log.Println(err)
 	}
 
-	storage := product.NewStorage(pool)
+	productStorage := product.NewStorage(pool)
+	stockStorage := stock.NewStockStorage(pool)
+	stockService := stock.NewService(stockStorage)
 
 	r := chi.NewRouter()
 
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 
-	r.Mount("/api/product", handlers.ProductRoutes(storage))
+	r.Mount("/api/product", handlers.ProductRoutes(productStorage))
+	r.Mount("/api/stock", handlers.StockRoutes(stockService))
 
-	consumers.ListenToProductEvents(ctx, storage)
+	consumers.ListenToProductEvents(ctx, productStorage)
 
 	err = http.ListenAndServe(":8080", r)
 	if err != nil {

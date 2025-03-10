@@ -50,6 +50,28 @@ func ExecQueryStructs[T any](pool *pgxpool.Pool, stmt Stmt) ([]T, error) {
 	return result, nil
 }
 
+func ExecQueryOneStruct[T any](pool *pgxpool.Pool, stmt Stmt) (T, error) {
+	var result T
+	conn, err := pool.Acquire(stmt.Ctx)
+	if err != nil {
+		return result, err
+	}
+	defer conn.Release()
+
+	rows, err := conn.Query(stmt.Ctx, stmt.Sql, stmt.Args...)
+
+	if err != nil {
+		return result, err
+	}
+
+	result, err = pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[T])
+	if err != nil {
+		return result, err
+	}
+
+	return result, nil
+}
+
 func ExecQueryOne[T any](pool *pgxpool.Pool, stmt Stmt) (T, error) {
 	var result T
 	conn, err := pool.Acquire(stmt.Ctx)
