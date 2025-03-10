@@ -13,6 +13,7 @@ func StockRoutes(service *stock.Service) chi.Router {
 	r := chi.NewRouter()
 
 	r.Post("/reserve", reserveHandler(service))
+	r.Post("/unreserve", unreserveHandler(service))
 
 	return r
 }
@@ -39,4 +40,26 @@ type ReserveRequest struct {
 	ProductId   uuid.UUID
 	OrderNumber uuid.UUID
 	Quantity    int
+}
+
+func unreserveHandler(service *stock.Service) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var urr UnreserveRequest
+		err := json.NewDecoder(r.Body).Decode(&urr)
+
+		if err != nil {
+			http.Error(w, "Can't unmarshal request", http.StatusInternalServerError)
+			return
+		}
+		err = service.Unreserve(r.Context(), urr.OrderNumber)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
+type UnreserveRequest struct {
+	OrderNumber uuid.UUID
 }

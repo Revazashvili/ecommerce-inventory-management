@@ -49,7 +49,36 @@ func (ps *postgresStorage) StockReservationExists(ctx context.Context, orderNumb
 	return e, nil
 }
 
-func (ps *postgresStorage) ReserveStock(ctx context.Context, s Stock) (Stock, error) {
+func (ps *postgresStorage) GetStockReservation(ctx context.Context, orderNumber uuid.UUID) (StockReservation, error) {
+	var sr StockReservation
+	sr, err := pgxh.ExecQueryOneStruct[StockReservation](ps.pool, pgxh.Stmt{
+		Ctx:  ctx,
+		Sql:  "select id, product_id, order_number, quantity, create_date, cancel_date from products.stock_reservations where order_number=$1",
+		Args: []any{orderNumber},
+	})
+
+	if err != nil {
+		return sr, err
+	}
+
+	return sr, nil
+}
+
+func (ps *postgresStorage) CancelStockReservation(ctx context.Context, sr StockReservation) (StockReservation, error) {
+	err := pgxh.ExecStmt(ps.pool, pgxh.Stmt{
+		Ctx:  ctx,
+		Sql:  "update products.stock_reservations set cancel_date=$1 where id=$2",
+		Args: []any{&sr.CancelDate, sr.Id},
+	})
+
+	if err != nil {
+		return sr, err
+	}
+
+	return sr, nil
+}
+
+func (ps *postgresStorage) UpdateStockReserve(ctx context.Context, s Stock) (Stock, error) {
 	err := pgxh.ExecStmt(ps.pool, pgxh.Stmt{
 		Ctx:  ctx,
 		Sql:  "update products.stocks set reserved_quantity=$1, version = version+1 where id=$2 and version=$3",

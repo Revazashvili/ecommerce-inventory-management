@@ -3,6 +3,7 @@ package stock
 import (
 	"context"
 	"errors"
+	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -16,6 +17,39 @@ func NewService(storage Storage) *Service {
 	return &Service{
 		storage: storage,
 	}
+}
+
+func (ss *Service) Unreserve(ctx context.Context, orderNumber uuid.UUID) error {
+	sr, err := ss.storage.GetStockReservation(ctx, orderNumber)
+	log.Println(*sr.CancelDate)
+
+	if err != nil {
+		return err
+	}
+
+	sr.Cancel()
+
+	s, err := ss.storage.GetStock(ctx, sr.ProductId)
+
+	if err != nil {
+		return err
+	}
+
+	s.Unreserve(sr.Quantity)
+
+	_, err = ss.storage.CancelStockReservation(ctx, sr)
+
+	if err != nil {
+		return err
+	}
+
+	_, err = ss.storage.UpdateStockReserve(ctx, s)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (ss *Service) Reserve(ctx context.Context, productID uuid.UUID, quantity int, orderNumber uuid.UUID) error {
@@ -55,7 +89,7 @@ func (ss *Service) Reserve(ctx context.Context, productID uuid.UUID, quantity in
 		return err
 	}
 
-	_, err = ss.storage.ReserveStock(ctx, s)
+	_, err = ss.storage.UpdateStockReserve(ctx, s)
 	if err != nil {
 		return err
 	}

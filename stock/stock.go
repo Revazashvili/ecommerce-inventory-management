@@ -38,3 +38,8 @@ type StockReservation struct {
 	CreateDate  time.Time
 	CancelDate  *time.Time
 }
+
+func (sr *StockReservation) Cancel() {
+	t := time.Now()
+	sr.CancelDate = &t
+}
