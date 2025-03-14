@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/Revazashvili/ecommerce-inventory-management/product"
+	pd "github.com/Revazashvili/ecommerce-inventory-management/product/database"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
@@ -15,11 +15,11 @@ const (
 
 var topics = []string{"products.ProductAddedEvent", "products.ProductNameUpdatedEvent"}
 
-func ListenToProductEvents(ctx context.Context, storage product.Storage) {
-	go listenForEvent(ctx, storage)
+func ListenToProductEvents(ctx context.Context, q *pd.Queries) {
+	go listenForEvent(ctx, q)
 }
 
-func listenForEvent(ctx context.Context, storage product.Storage) {
+func listenForEvent(ctx context.Context, q *pd.Queries) {
 	c, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers": broker,
 		"group.id":          "products",
@@ -53,7 +53,7 @@ func listenForEvent(ctx context.Context, storage product.Storage) {
 				continue
 			}
 
-			var p product.Product
+			var p pd.Product
 
 			err = json.Unmarshal(message.Value, &p)
 
@@ -63,13 +63,13 @@ func listenForEvent(ctx context.Context, storage product.Storage) {
 			}
 
 			if *message.TopicPartition.Topic == "products.ProductAddedEvent" {
-				_, err := storage.Add(ctx, p)
+				err := q.Insert(ctx, pd.InsertParams(p))
 				if err != nil {
 					log.Println(err)
 					continue
 				}
 			} else {
-				_, err := storage.Update(ctx, p)
+				err := q.Update(ctx, pd.UpdateParams{ID: p.ID, Name: p.Name})
 				if err != nil {
 					log.Println(err)
 					continue

@@ -7,7 +7,7 @@ import (
 
 	"github.com/Revazashvili/ecommerce-inventory-management/consumers"
 	"github.com/Revazashvili/ecommerce-inventory-management/handlers"
-	"github.com/Revazashvili/ecommerce-inventory-management/product"
+	pd "github.com/Revazashvili/ecommerce-inventory-management/product/database"
 	"github.com/Revazashvili/ecommerce-inventory-management/stock"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -25,7 +25,9 @@ func main() {
 		log.Println(err)
 	}
 
-	productStorage := product.NewStorage(pool)
+	defer pool.Close()
+
+	productStorage := pd.NewProductsDatabase(pool)
 	stockStorage := stock.NewStockStorage(pool)
 	stockService := stock.NewService(stockStorage)
 
