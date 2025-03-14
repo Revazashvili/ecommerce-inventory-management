@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/Revazashvili/ecommerce-inventory-management/stock"
 	"github.com/go-chi/chi/v5"
@@ -12,10 +13,45 @@ import (
 func StockRoutes(service *stock.Service) chi.Router {
 	r := chi.NewRouter()
 
+	r.Get("/", stocksHandler(service))
 	r.Post("/reserve", reserveHandler(service))
 	r.Post("/unreserve", unreserveHandler(service))
 
 	return r
+}
+
+type GetStocksRequest struct {
+	ProductID *uuid.UUID
+	From      *time.Time
+	To        *time.Time
+}
+
+func stocksHandler(service *stock.Service) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var gtr GetStocksRequest
+		err := json.NewDecoder(r.Body).Decode(&gtr)
+
+		if err != nil {
+			http.Error(w, "Can't unmarshal request", http.StatusInternalServerError)
+			return
+		}
+
+		stocks, err := service.GetStocks(r.Context(), gtr.ProductID, gtr.From, gtr.To)
+
+		if err != nil {
+			http.Error(w, "can't retrieve rows", http.StatusInternalServerError)
+			return
+		}
+
+		if len(stocks) > 0 {
+			err = json.NewEncoder(w).Encode(stocks)
+
+			if err != nil {
+				http.Error(w, "Can't marshal response", http.StatusInternalServerError)
+				return
+			}
+		}
+	}
 }
 
 func reserveHandler(service *stock.Service) http.HandlerFunc {

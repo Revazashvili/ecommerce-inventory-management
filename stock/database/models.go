@@ -5,8 +5,9 @@
 package database
 
 import (
+	"time"
+
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Stock struct {
@@ -15,8 +16,8 @@ type Stock struct {
 	Quantity         int32
 	ReservedQuantity int32
 	Version          int32
-	CreateDate       pgtype.Timestamp
-	LastUpdateDate   pgtype.Timestamp
+	CreateDate       time.Time
+	LastUpdateDate   time.Time
 }
 
 type StockReservation struct {
@@ -24,6 +25,6 @@ type StockReservation struct {
 	ProductID   uuid.UUID
 	OrderNumber uuid.UUID
 	Quantity    int32
-	CreateDate  pgtype.Timestamp
-	CancelDate  pgtype.Timestamp
+	CreateDate  time.Time
+	CancelDate  *time.Time
 }

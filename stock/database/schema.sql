@@ -6,8 +6,8 @@ create table products.stocks(
     quantity int not null ,
     reserved_quantity int not null ,
     version int not null ,
-    create_date timestamp not null ,
-    last_update_date timestamp not null
+    create_date timestamp not null default now(),
+    last_update_date timestamp not null default now()
 );
 
 create table products.stock_reservations(

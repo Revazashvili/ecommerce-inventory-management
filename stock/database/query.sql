@@ -15,3 +15,11 @@ update products.stocks set reserved_quantity = @reservedQuantity, version = vers
 
 -- name: AddStockReservation :exec
 insert into products.stock_reservations (id, product_id, order_number, quantity, create_date, cancel_date) values ($1, $2, $3, $4, $5, $6);
+
+-- name: GetStocks :many
+select * from products.stocks
+where (sqlc.narg('productID')::uuid is null or product_id = sqlc.narg('productID')::uuid) 
+  and (
+    (sqlc.narg('from')::timestamp is null or create_date > sqlc.narg('from')::timestamp)
+     and (sqlc.narg('to')::timestamp is null or create_date < sqlc.narg('to')::timestamp)
+     );

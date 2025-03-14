@@ -20,6 +20,20 @@ func NewService(q *sd.Queries) *Service {
 	}
 }
 
+func (ss *Service) GetStocks(ctx context.Context, productID *uuid.UUID, from *time.Time, to *time.Time) ([]sd.Stock, error) {
+
+	pID := pgtype.UUID{Valid: false}
+	if productID != nil {
+		pID = pgtype.UUID{Valid: true, Bytes: *productID}
+	}
+
+	return ss.q.GetStocks(ctx, sd.GetStocksParams{
+		ProductID: pID,
+		From:      from,
+		To:        to,
+	})
+}
+
 func (ss *Service) Unreserve(ctx context.Context, orderNumber uuid.UUID) error {
 	dsr, err := ss.q.GetStockReservation(ctx, orderNumber)
 
@@ -35,10 +49,8 @@ func (ss *Service) Unreserve(ctx context.Context, orderNumber uuid.UUID) error {
 		return err
 	}
 
-	err = ss.q.CancelStockReservation(ctx, sd.CancelStockReservationParams{ID: sr.ID, Canceldate: pgtype.Timestamp{
-		Time:  time.Now(),
-		Valid: true,
-	}})
+	n := time.Now()
+	err = ss.q.CancelStockReservation(ctx, sd.CancelStockReservationParams{ID: sr.ID, Canceldate: &n})
 
 	if err != nil {
 		return err
@@ -86,10 +98,7 @@ func (ss *Service) Reserve(ctx context.Context, productID uuid.UUID, quantity in
 		ProductID:   productID,
 		OrderNumber: orderNumber,
 		Quantity:    int32(quantity),
-		CreateDate: pgtype.Timestamp{
-			Valid: true,
-			Time:  time.Now(),
-		},
+		CreateDate:  time.Now(),
 	})
 
 	if err != nil {

@@ -34,6 +34,7 @@ func main() {
 
 	r := chi.NewRouter()
 
+	r.Use(middleware.Recoverer)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 

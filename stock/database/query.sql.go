@@ -7,6 +7,7 @@ package database
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -21,8 +22,8 @@ type AddStockReservationParams struct {
 	ProductID   uuid.UUID
 	OrderNumber uuid.UUID
 	Quantity    int32
-	CreateDate  pgtype.Timestamp
-	CancelDate  pgtype.Timestamp
+	CreateDate  time.Time
+	CancelDate  *time.Time
 }
 
 func (q *Queries) AddStockReservation(ctx context.Context, arg AddStockReservationParams) error {
@@ -42,7 +43,7 @@ update products.stock_reservations set cancel_date = $1 where id = $2
 `
 
 type CancelStockReservationParams struct {
-	Canceldate pgtype.Timestamp
+	Canceldate *time.Time
 	ID         uuid.UUID
 }
 
@@ -94,6 +95,49 @@ func (q *Queries) GetStockReservation(ctx context.Context, ordernumber uuid.UUID
 		&i.StockReservation.CancelDate,
 	)
 	return i, err
+}
+
+const getStocks = `-- name: GetStocks :many
+select id, product_id, quantity, reserved_quantity, version, create_date, last_update_date from products.stocks
+where ($1::uuid is null or product_id = $1::uuid) 
+  and (
+    ($2::timestamp is null or create_date > $2::timestamp)
+     and ($3::timestamp is null or create_date < $3::timestamp)
+     )
+`
+
+type GetStocksParams struct {
+	ProductID pgtype.UUID
+	From      *time.Time
+	To        *time.Time
+}
+
+func (q *Queries) GetStocks(ctx context.Context, arg GetStocksParams) ([]Stock, error) {
+	rows, err := q.db.Query(ctx, getStocks, arg.ProductID, arg.From, arg.To)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Stock
+	for rows.Next() {
+		var i Stock
+		if err := rows.Scan(
+			&i.ID,
+			&i.ProductID,
+			&i.Quantity,
+			&i.ReservedQuantity,
+			&i.Version,
+			&i.CreateDate,
+			&i.LastUpdateDate,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const stockReservationExists = `-- name: StockReservationExists :one
