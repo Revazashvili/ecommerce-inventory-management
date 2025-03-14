@@ -3,47 +3,52 @@ package stock
 import (
 	"context"
 	"errors"
-	"log"
 	"time"
 
+	sd "github.com/Revazashvili/ecommerce-inventory-management/stock/database"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Service struct {
-	storage Storage
+	q *sd.Queries
 }
 
-func NewService(storage Storage) *Service {
+func NewService(q *sd.Queries) *Service {
 	return &Service{
-		storage: storage,
+		q: q,
 	}
 }
 
 func (ss *Service) Unreserve(ctx context.Context, orderNumber uuid.UUID) error {
-	sr, err := ss.storage.GetStockReservation(ctx, orderNumber)
-	log.Println(*sr.CancelDate)
+	dsr, err := ss.q.GetStockReservation(ctx, orderNumber)
 
 	if err != nil {
 		return err
 	}
 
-	sr.Cancel()
+	sr := dsr.StockReservation
 
-	s, err := ss.storage.GetStock(ctx, sr.ProductId)
-
-	if err != nil {
-		return err
-	}
-
-	s.Unreserve(sr.Quantity)
-
-	_, err = ss.storage.CancelStockReservation(ctx, sr)
+	s, err := ss.q.GetStock(ctx, sr.ProductID)
 
 	if err != nil {
 		return err
 	}
 
-	_, err = ss.storage.UpdateStockReserve(ctx, s)
+	err = ss.q.CancelStockReservation(ctx, sd.CancelStockReservationParams{ID: sr.ID, Canceldate: pgtype.Timestamp{
+		Time:  time.Now(),
+		Valid: true,
+	}})
+
+	if err != nil {
+		return err
+	}
+
+	err = ss.q.UpdateStockReserve(ctx, sd.UpdateStockReserveParams{
+		Reservedquantity: s.Stock.ReservedQuantity - sr.Quantity,
+		ID:               s.Stock.ID,
+		Version:          s.Stock.Version,
+	})
 
 	if err != nil {
 		return err
@@ -54,7 +59,7 @@ func (ss *Service) Unreserve(ctx context.Context, orderNumber uuid.UUID) error {
 
 func (ss *Service) Reserve(ctx context.Context, productID uuid.UUID, quantity int, orderNumber uuid.UUID) error {
 
-	sre, err := ss.storage.StockReservationExists(ctx, orderNumber)
+	sre, err := ss.q.StockReservationExists(ctx, orderNumber)
 
 	if err != nil {
 		return err
@@ -64,32 +69,39 @@ func (ss *Service) Reserve(ctx context.Context, productID uuid.UUID, quantity in
 		return errors.New("reservation for order number already exists")
 	}
 
-	s, err := ss.storage.GetStock(ctx, productID)
+	s, err := ss.q.GetStock(ctx, productID)
 
 	if err != nil {
 		return err
 	}
 
-	if s.GetAvailableQuantity() < quantity {
+	aq := int(s.Stock.Quantity - s.Stock.ReservedQuantity)
+
+	if aq < quantity {
 		return errors.New("not enought available quantity")
 	}
 
-	sr := StockReservation{
-		Id:          uuid.New(),
-		ProductId:   productID,
+	err = ss.q.AddStockReservation(ctx, sd.AddStockReservationParams{
+		ID:          uuid.New(),
+		ProductID:   productID,
 		OrderNumber: orderNumber,
-		Quantity:    quantity,
-		CreateDate:  time.Now(),
-	}
+		Quantity:    int32(quantity),
+		CreateDate: pgtype.Timestamp{
+			Valid: true,
+			Time:  time.Now(),
+		},
+	})
 
-	s.Reserve(quantity)
-
-	_, err = ss.storage.AddStockReservation(ctx, sr)
 	if err != nil {
 		return err
 	}
 
-	_, err = ss.storage.UpdateStockReserve(ctx, s)
+	err = ss.q.UpdateStockReserve(ctx, sd.UpdateStockReserveParams{
+		ID:               s.Stock.ID,
+		Version:          s.Stock.Version,
+		Reservedquantity: int32(s.Stock.ReservedQuantity + int32(quantity)),
+	})
+
 	if err != nil {
 		return err
 	}
