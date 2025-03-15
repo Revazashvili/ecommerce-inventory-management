@@ -5,9 +5,9 @@ import (
 	"errors"
 	"time"
 
+	"github.com/Revazashvili/ecommerce-inventory-management/internal"
 	sd "github.com/Revazashvili/ecommerce-inventory-management/stock/database"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Service struct {
@@ -21,14 +21,8 @@ func NewService(q *sd.Queries) *Service {
 }
 
 func (ss *Service) GetStocks(ctx context.Context, productID *uuid.UUID, from *time.Time, to *time.Time) ([]sd.Stock, error) {
-
-	pID := pgtype.UUID{Valid: false}
-	if productID != nil {
-		pID = pgtype.UUID{Valid: true, Bytes: *productID}
-	}
-
 	return ss.q.GetStocks(ctx, sd.GetStocksParams{
-		ProductID: pID,
+		ProductID: internal.ToPgTypeUUID(productID),
 		From:      from,
 		To:        to,
 	})
