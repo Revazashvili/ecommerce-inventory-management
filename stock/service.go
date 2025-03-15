@@ -8,6 +8,7 @@ import (
 	"github.com/Revazashvili/ecommerce-inventory-management/internal"
 	sd "github.com/Revazashvili/ecommerce-inventory-management/stock/database"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 type Service struct {
@@ -18,6 +19,37 @@ func NewService(q *sd.Queries) *Service {
 	return &Service{
 		q: q,
 	}
+}
+
+func (ss *Service) AddStock(ctx context.Context, productID uuid.UUID, quantity int) error {
+	s, err := ss.q.GetStock(ctx, productID)
+
+	if err != nil && err != pgx.ErrNoRows {
+		return err
+	}
+
+	if err == pgx.ErrNoRows {
+		now := time.Now()
+
+		sip := sd.InsertParams{
+			ID:             uuid.New(),
+			ProductID:      productID,
+			Quantity:       int32(quantity),
+			Version:        int32(1),
+			CreateDate:     now,
+			LastUpdateDate: now,
+		}
+
+		return ss.q.Insert(ctx, sip)
+	} else {
+		ss.q.UpdateStockQuantity(ctx, sd.UpdateStockQuantityParams{
+			ID:       s.Stock.ID,
+			Version:  s.Stock.Version,
+			Quantity: s.Stock.Quantity + int32(quantity),
+		})
+	}
+
+	return nil
 }
 
 func (ss *Service) GetStocks(ctx context.Context, productID *uuid.UUID, from *time.Time, to *time.Time) ([]sd.Stock, error) {

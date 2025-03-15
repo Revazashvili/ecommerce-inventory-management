@@ -14,10 +14,35 @@ func StockRoutes(service *stock.Service) chi.Router {
 	r := chi.NewRouter()
 
 	r.Get("/", stocksHandler(service))
+	r.Post("/add", addHandler(service))
 	r.Post("/reserve", reserveHandler(service))
 	r.Post("/unreserve", unreserveHandler(service))
 
 	return r
+}
+
+type AddStockRequest struct {
+	ProductID uuid.UUID
+	Quantity  int
+}
+
+func addHandler(service *stock.Service) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var asr AddStockRequest
+		err := json.NewDecoder(r.Body).Decode(&asr)
+
+		if err != nil {
+			http.Error(w, "Can't unmarshal request", http.StatusInternalServerError)
+			return
+		}
+
+		err = service.AddStock(r.Context(), asr.ProductID, asr.Quantity)
+
+		if err != nil {
+			http.Error(w, "Can't add stock", http.StatusInternalServerError)
+			return
+		}
+	}
 }
 
 type GetStocksRequest struct {

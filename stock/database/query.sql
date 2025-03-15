@@ -23,3 +23,10 @@ where (sqlc.narg('productID')::uuid is null or product_id = sqlc.narg('productID
     (sqlc.narg('from')::timestamp is null or create_date > sqlc.narg('from')::timestamp)
      and (sqlc.narg('to')::timestamp is null or create_date < sqlc.narg('to')::timestamp)
      );
+
+-- name: Insert :exec
+insert into products.stocks (id, product_id, quantity, reserved_quantity, version, create_date, last_update_date) 
+values ($1, $2, $3, $4, $5, $6, $7);
+
+-- name: UpdateStockQuantity :exec
+update products.stocks set quantity = @quantity, version = version+1 where id = @ID and version = @version;

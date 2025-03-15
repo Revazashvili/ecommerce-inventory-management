@@ -140,6 +140,34 @@ func (q *Queries) GetStocks(ctx context.Context, arg GetStocksParams) ([]Stock, 
 	return items, nil
 }
 
+const insert = `-- name: Insert :exec
+insert into products.stocks (id, product_id, quantity, reserved_quantity, version, create_date, last_update_date) 
+values ($1, $2, $3, $4, $5, $6, $7)
+`
+
+type InsertParams struct {
+	ID               uuid.UUID
+	ProductID        uuid.UUID
+	Quantity         int32
+	ReservedQuantity int32
+	Version          int32
+	CreateDate       time.Time
+	LastUpdateDate   time.Time
+}
+
+func (q *Queries) Insert(ctx context.Context, arg InsertParams) error {
+	_, err := q.db.Exec(ctx, insert,
+		arg.ID,
+		arg.ProductID,
+		arg.Quantity,
+		arg.ReservedQuantity,
+		arg.Version,
+		arg.CreateDate,
+		arg.LastUpdateDate,
+	)
+	return err
+}
+
 const stockReservationExists = `-- name: StockReservationExists :one
 select exists(select 1 from products.stock_reservations where order_number = $1 and cancel_date is null)
 `
@@ -149,6 +177,21 @@ func (q *Queries) StockReservationExists(ctx context.Context, ordernumber uuid.U
 	var exists bool
 	err := row.Scan(&exists)
 	return exists, err
+}
+
+const updateStockQuantity = `-- name: UpdateStockQuantity :exec
+update products.stocks set quantity = $1, version = version+1 where id = $2 and version = $3
+`
+
+type UpdateStockQuantityParams struct {
+	Quantity int32
+	ID       uuid.UUID
+	Version  int32
+}
+
+func (q *Queries) UpdateStockQuantity(ctx context.Context, arg UpdateStockQuantityParams) error {
+	_, err := q.db.Exec(ctx, updateStockQuantity, arg.Quantity, arg.ID, arg.Version)
+	return err
 }
 
 const updateStockReserve = `-- name: UpdateStockReserve :exec
