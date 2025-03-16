@@ -33,6 +33,7 @@ type AddStockRequest struct {
 // @Accept       json
 // @Produce      json
 // @Success		 200
+// @Failure		 400	{object}	string
 // @Failure		 500	{object}	string
 // @Param        addStockRequest    body     AddStockRequest  false  "addStockRequest"
 // @Router       /api/stock/add [post]
@@ -42,7 +43,7 @@ func addHandler(service *stock.Service) http.HandlerFunc {
 		err := json.NewDecoder(r.Body).Decode(&asr)
 
 		if err != nil {
-			http.Error(w, "Can't unmarshal request", http.StatusInternalServerError)
+			http.Error(w, "Can't unmarshal request", http.StatusBadRequest)
 			return
 		}
 
@@ -68,6 +69,7 @@ type GetStocksRequest struct {
 // @Accept       json
 // @Produce      json
 // @Success		 200	{object}	[]database.Stock
+// @Failure		 400	{object}	string
 // @Failure		 500	{object}	string
 // @Param        getStockRequest    body     GetStocksRequest  false  "getStockRequest"
 // @Router       /api/stock [get]
@@ -77,7 +79,7 @@ func stocksHandler(service *stock.Service) http.HandlerFunc {
 		err := json.NewDecoder(r.Body).Decode(&gtr)
 
 		if err != nil {
-			http.Error(w, "Can't unmarshal request", http.StatusInternalServerError)
+			http.Error(w, "Can't unmarshal request", http.StatusBadRequest)
 			return
 		}
 
@@ -106,6 +108,7 @@ func stocksHandler(service *stock.Service) http.HandlerFunc {
 // @Accept       json
 // @Produce      json
 // @Success		 200
+// @Failure		 400	{object}	string
 // @Failure		 500	{object}	string
 // @Param        reserveRequest    body     ReserveRequest  false  "reserveRequest"
 // @Router       /api/stock/reserve [post]
@@ -115,7 +118,7 @@ func reserveHandler(service *stock.Service) http.HandlerFunc {
 		err := json.NewDecoder(r.Body).Decode(&rr)
 
 		if err != nil {
-			http.Error(w, "Can't unmarshal request", http.StatusInternalServerError)
+			http.Error(w, "Can't unmarshal request", http.StatusBadRequest)
 			return
 		}
 		err = service.Reserve(r.Context(), rr.ProductId, rr.Quantity, rr.OrderNumber)
@@ -140,6 +143,7 @@ type ReserveRequest struct {
 // @Accept       json
 // @Produce      json
 // @Success		 200
+// @Failure		 400	{object}	string
 // @Failure		 500	{object}	string
 // @Param        unreserveRequest    body     UnreserveRequest  false  "unreserveRequest"
 // @Router       /api/stock/unreserve [post]
@@ -149,7 +153,7 @@ func unreserveHandler(service *stock.Service) http.HandlerFunc {
 		err := json.NewDecoder(r.Body).Decode(&urr)
 
 		if err != nil {
-			http.Error(w, "Can't unmarshal request", http.StatusInternalServerError)
+			http.Error(w, "Can't unmarshal request", http.StatusBadRequest)
 			return
 		}
 		err = service.Unreserve(r.Context(), urr.OrderNumber)
