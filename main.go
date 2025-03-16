@@ -29,7 +29,7 @@ func main() {
 	defer pool.Close()
 
 	pd := pd.NewProductsDatabase(pool)
-	sd := sd.NewStockDatabase(pool)
+	sd := sd.NewStockStorage(pool)
 	ss := stock.NewService(sd)
 
 	r := chi.NewRouter()
