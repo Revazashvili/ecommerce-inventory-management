@@ -15,7 +15,7 @@ func ProductRoutes(q *pd.Queries) chi.Router {
 	return r
 }
 
-func getHandler(q *pd.Queries) func(http.ResponseWriter, *http.Request) {
+func getHandler(q pd.Querier) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		name := r.URL.Query().Get("name")
@@ -35,7 +35,7 @@ func getHandler(q *pd.Queries) func(http.ResponseWriter, *http.Request) {
 	}
 }
 
-func getCountHandler(q *pd.Queries) func(http.ResponseWriter, *http.Request) {
+func getCountHandler(q pd.Querier) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := r.URL.Query().Get("name")
 		count, err := q.GetCount(r.Context(), name)
