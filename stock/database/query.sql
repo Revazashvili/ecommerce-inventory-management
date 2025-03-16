@@ -2,7 +2,7 @@
 select sqlc.embed(s) from products.stocks s where s.product_id = @productID;
 
 -- name: GetStockReservation :one
-select sqlc.embed(sr) from products.stock_reservations sr where sr.order_number = @orderNumber;
+select sqlc.embed(sr) from products.stock_reservations sr where sr.order_number = @orderNumber and cancel_date is null;
 
 -- name: StockReservationExists :one
 select exists(select 1 from products.stock_reservations where order_number = @orderNumber and cancel_date is null);

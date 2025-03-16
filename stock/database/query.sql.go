@@ -76,7 +76,7 @@ func (q *Queries) GetStock(ctx context.Context, productid uuid.UUID) (GetStockRo
 }
 
 const getStockReservation = `-- name: GetStockReservation :one
-select sr.id, sr.product_id, sr.order_number, sr.quantity, sr.create_date, sr.cancel_date from products.stock_reservations sr where sr.order_number = $1
+select sr.id, sr.product_id, sr.order_number, sr.quantity, sr.create_date, sr.cancel_date from products.stock_reservations sr where sr.order_number = $1 and cancel_date is null
 `
 
 type GetStockReservationRow struct {

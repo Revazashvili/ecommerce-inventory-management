@@ -3,7 +3,6 @@ package stock
 import (
 	"context"
 	"errors"
-	"log"
 	"time"
 
 	"github.com/Revazashvili/ecommerce-inventory-management/internal"
@@ -68,12 +67,14 @@ func (ss *Service) Unreserve(ctx context.Context, orderNumber uuid.UUID) error {
 		dsr, err := q.GetStockReservation(ctx, orderNumber)
 
 		if err != nil {
+			if err == pgx.ErrNoRows {
+				return errors.New("stock reserverion not found")
+			}
+
 			return err
 		}
 
 		sr := dsr.StockReservation
-
-		log.Println(sr)
 
 		s, err := q.GetStock(ctx, sr.ProductID)
 
