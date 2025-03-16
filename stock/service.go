@@ -12,10 +12,10 @@ import (
 )
 
 type Service struct {
-	q *sd.Queries
+	q sd.Querier
 }
 
-func NewService(q *sd.Queries) *Service {
+func NewService(q sd.Querier) *Service {
 	return &Service{
 		q: q,
 	}
