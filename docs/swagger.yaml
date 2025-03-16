@@ -1,0 +1,211 @@
+basePath: /
+definitions:
+  database.Product:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  database.Stock:
+    properties:
+      createDate:
+        type: string
+      id:
+        type: string
+      lastUpdateDate:
+        type: string
+      productID:
+        type: string
+      quantity:
+        type: integer
+      reservedQuantity:
+        type: integer
+      version:
+        type: integer
+    type: object
+  handlers.AddStockRequest:
+    properties:
+      productID:
+        type: string
+      quantity:
+        type: integer
+    type: object
+  handlers.GetStocksRequest:
+    properties:
+      from:
+        type: string
+      productID:
+        type: string
+      to:
+        type: string
+    type: object
+  handlers.ReserveRequest:
+    properties:
+      orderNumber:
+        type: string
+      productId:
+        type: string
+      quantity:
+        type: integer
+    type: object
+  handlers.UnreserveRequest:
+    properties:
+      orderNumber:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: ECommerce Inventory Management System used to add, reserve, unreserve
+    and get stocks in your system
+  title: ECommerce Inventory Management System
+  version: "1.0"
+paths:
+  /api/product:
+    get:
+      consumes:
+      - application/json
+      description: Get product
+      parameters:
+      - description: name
+        in: query
+        name: name
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/database.Product'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get product
+      tags:
+      - products
+  /api/product/count:
+    get:
+      consumes:
+      - application/json
+      description: Get product count
+      parameters:
+      - description: name
+        in: query
+        name: name
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: integer
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get product count
+      tags:
+      - products
+  /api/stock:
+    get:
+      consumes:
+      - application/json
+      description: Get Stock
+      parameters:
+      - description: getStockRequest
+        in: body
+        name: getStockRequest
+        schema:
+          $ref: '#/definitions/handlers.GetStocksRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/database.Stock'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get Stock
+      tags:
+      - stocks
+  /api/stock/add:
+    post:
+      consumes:
+      - application/json
+      description: Add Stock
+      parameters:
+      - description: addStockRequest
+        in: body
+        name: addStockRequest
+        schema:
+          $ref: '#/definitions/handlers.AddStockRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Add Stock
+      tags:
+      - stocks
+  /api/stock/reserve:
+    post:
+      consumes:
+      - application/json
+      description: Reserve Stock
+      parameters:
+      - description: reserveRequest
+        in: body
+        name: reserveRequest
+        schema:
+          $ref: '#/definitions/handlers.ReserveRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Reserve Stock
+      tags:
+      - stocks
+  /api/stock/unreserve:
+    post:
+      consumes:
+      - application/json
+      description: Unreserve Stock
+      parameters:
+      - description: unreserveRequest
+        in: body
+        name: unreserveRequest
+        schema:
+          $ref: '#/definitions/handlers.UnreserveRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: ReserUnreserveve Stock
+      tags:
+      - stocks
+swagger: "2.0"

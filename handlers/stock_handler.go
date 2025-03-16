@@ -26,6 +26,16 @@ type AddStockRequest struct {
 	Quantity  int
 }
 
+// AddStock godoc
+// @Summary      Add Stock
+// @Description  Add Stock
+// @Tags         stocks
+// @Accept       json
+// @Produce      json
+// @Success		 200
+// @Failure		 500	{object}	string
+// @Param        addStockRequest    body     AddStockRequest  false  "addStockRequest"
+// @Router       /api/stock/add [post]
 func addHandler(service *stock.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var asr AddStockRequest
@@ -51,6 +61,16 @@ type GetStocksRequest struct {
 	To        *time.Time
 }
 
+// GetStock godoc
+// @Summary      Get Stock
+// @Description  Get Stock
+// @Tags         stocks
+// @Accept       json
+// @Produce      json
+// @Success		 200	{object}	[]database.Stock
+// @Failure		 500	{object}	string
+// @Param        getStockRequest    body     GetStocksRequest  false  "getStockRequest"
+// @Router       /api/stock [get]
 func stocksHandler(service *stock.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var gtr GetStocksRequest
@@ -79,6 +99,16 @@ func stocksHandler(service *stock.Service) http.HandlerFunc {
 	}
 }
 
+// ReserveStock godoc
+// @Summary      Reserve Stock
+// @Description  Reserve Stock
+// @Tags         stocks
+// @Accept       json
+// @Produce      json
+// @Success		 200
+// @Failure		 500	{object}	string
+// @Param        reserveRequest    body     ReserveRequest  false  "reserveRequest"
+// @Router       /api/stock/reserve [post]
 func reserveHandler(service *stock.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var rr ReserveRequest
@@ -103,6 +133,16 @@ type ReserveRequest struct {
 	Quantity    int
 }
 
+// UnreserveStock godoc
+// @Summary      ReserUnreserveve Stock
+// @Description  Unreserve Stock
+// @Tags         stocks
+// @Accept       json
+// @Produce      json
+// @Success		 200
+// @Failure		 500	{object}	string
+// @Param        unreserveRequest    body     UnreserveRequest  false  "unreserveRequest"
+// @Router       /api/stock/unreserve [post]
 func unreserveHandler(service *stock.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var urr UnreserveRequest

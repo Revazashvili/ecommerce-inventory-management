@@ -15,6 +15,16 @@ func ProductRoutes(q *pd.Queries) chi.Router {
 	return r
 }
 
+// GetProduct godoc
+// @Summary      Get product
+// @Description  Get product
+// @Tags         products
+// @Accept       json
+// @Produce      json
+// @Success		 200	{object}	[]pd.Product
+// @Failure		 500	{object}	string
+// @Param        name    query     string  false  "name"
+// @Router       /api/product [get]
 func getHandler(q pd.Querier) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
@@ -35,6 +45,16 @@ func getHandler(q pd.Querier) func(http.ResponseWriter, *http.Request) {
 	}
 }
 
+// GetProductCount godoc
+// @Summary      Get product count
+// @Description  Get product count
+// @Tags         products
+// @Accept       json
+// @Produce      json
+// @Success		 200	{object}	int64
+// @Failure		 500	{object}	string
+// @Param        name    query     string  false  "name"
+// @Router       /api/product/count [get]
 func getCountHandler(q pd.Querier) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := r.URL.Query().Get("name")
