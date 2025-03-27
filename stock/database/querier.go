@@ -14,7 +14,7 @@ type Querier interface {
 	AddStockReservation(ctx context.Context, arg AddStockReservationParams) error
 	CancelStockReservation(ctx context.Context, arg CancelStockReservationParams) error
 	GetStock(ctx context.Context, productid uuid.UUID) (GetStockRow, error)
-	GetStockReservation(ctx context.Context, ordernumber uuid.UUID) (GetStockReservationRow, error)
+	GetStockReservations(ctx context.Context, ordernumber uuid.UUID) ([]StockReservation, error)
 	GetStocks(ctx context.Context, arg GetStocksParams) ([]Stock, error)
 	Insert(ctx context.Context, arg InsertParams) error
 	StockReservationExists(ctx context.Context, ordernumber uuid.UUID) (bool, error)

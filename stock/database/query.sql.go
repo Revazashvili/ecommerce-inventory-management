@@ -75,26 +75,35 @@ func (q *Queries) GetStock(ctx context.Context, productid uuid.UUID) (GetStockRo
 	return i, err
 }
 
-const getStockReservation = `-- name: GetStockReservation :one
+const getStockReservations = `-- name: GetStockReservations :many
 select sr.id, sr.product_id, sr.order_number, sr.quantity, sr.create_date, sr.cancel_date from products.stock_reservations sr where sr.order_number = $1 and cancel_date is null
 `
 
-type GetStockReservationRow struct {
-	StockReservation StockReservation
-}
-
-func (q *Queries) GetStockReservation(ctx context.Context, ordernumber uuid.UUID) (GetStockReservationRow, error) {
-	row := q.db.QueryRow(ctx, getStockReservation, ordernumber)
-	var i GetStockReservationRow
-	err := row.Scan(
-		&i.StockReservation.ID,
-		&i.StockReservation.ProductID,
-		&i.StockReservation.OrderNumber,
-		&i.StockReservation.Quantity,
-		&i.StockReservation.CreateDate,
-		&i.StockReservation.CancelDate,
-	)
-	return i, err
+func (q *Queries) GetStockReservations(ctx context.Context, ordernumber uuid.UUID) ([]StockReservation, error) {
+	rows, err := q.db.Query(ctx, getStockReservations, ordernumber)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []StockReservation
+	for rows.Next() {
+		var i StockReservation
+		if err := rows.Scan(
+			&i.ID,
+			&i.ProductID,
+			&i.OrderNumber,
+			&i.Quantity,
+			&i.CreateDate,
+			&i.CancelDate,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getStocks = `-- name: GetStocks :many

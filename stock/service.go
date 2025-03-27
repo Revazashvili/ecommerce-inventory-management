@@ -64,7 +64,7 @@ func (ss *Service) GetStocks(ctx context.Context, productID *uuid.UUID, from *ti
 
 func (ss *Service) Unreserve(ctx context.Context, orderNumber uuid.UUID) error {
 	return ss.s.ExecWithTx(ctx, func(q sd.Querier) error {
-		dsr, err := q.GetStockReservation(ctx, orderNumber)
+		rss, err := q.GetStockReservations(ctx, orderNumber)
 
 		if err != nil {
 			if err == pgx.ErrNoRows {
@@ -74,28 +74,32 @@ func (ss *Service) Unreserve(ctx context.Context, orderNumber uuid.UUID) error {
 			return err
 		}
 
-		sr := dsr.StockReservation
+		for _, r := range rss {
+			s, err := q.GetStock(ctx, r.ProductID)
 
-		s, err := q.GetStock(ctx, sr.ProductID)
+			if err != nil {
+				return err
+			}
 
-		if err != nil {
-			return err
+			n := time.Now()
+			err = q.CancelStockReservation(ctx, sd.CancelStockReservationParams{ID: r.ID, Canceldate: &n})
+
+			if err != nil {
+				return err
+			}
+
+			err = q.UpdateStockReserve(ctx, sd.UpdateStockReserveParams{
+				Reservedquantity: s.Stock.ReservedQuantity - r.Quantity,
+				ID:               s.Stock.ID,
+				Version:          s.Stock.Version,
+			})
+
+			if err != nil {
+				return err
+			}
 		}
 
-		n := time.Now()
-		err = q.CancelStockReservation(ctx, sd.CancelStockReservationParams{ID: sr.ID, Canceldate: &n})
-
-		if err != nil {
-			return err
-		}
-
-		err = q.UpdateStockReserve(ctx, sd.UpdateStockReserveParams{
-			Reservedquantity: s.Stock.ReservedQuantity - sr.Quantity,
-			ID:               s.Stock.ID,
-			Version:          s.Stock.Version,
-		})
-
-		return err
+		return nil
 	})
 }
 
