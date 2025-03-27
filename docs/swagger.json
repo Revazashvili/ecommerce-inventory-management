@@ -6,7 +6,7 @@
         "contact": {},
         "version": "1.0"
     },
-    "host": "localhost:8080",
+    "host": "localhost:3456",
     "basePath": "/",
     "paths": {
         "/api/product": {
@@ -330,6 +330,17 @@
                 "orderNumber": {
                     "type": "string"
                 },
+                "products": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.ReserveRequestProduct"
+                    }
+                }
+            }
+        },
+        "handlers.ReserveRequestProduct": {
+            "type": "object",
+            "properties": {
                 "productId": {
                     "type": "string"
                 },

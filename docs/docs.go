@@ -336,6 +336,17 @@ const docTemplate = `{
                 "orderNumber": {
                     "type": "string"
                 },
+                "products": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.ReserveRequestProduct"
+                    }
+                }
+            }
+        },
+        "handlers.ReserveRequestProduct": {
+            "type": "object",
+            "properties": {
                 "productId": {
                     "type": "string"
                 },
@@ -358,7 +369,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:8080",
+	Host:             "localhost:3456",
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "ECommerce Inventory Management System",

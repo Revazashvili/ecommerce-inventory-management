@@ -121,7 +121,17 @@ func reserveHandler(service *stock.Service) http.HandlerFunc {
 			http.Error(w, "Can't unmarshal request", http.StatusBadRequest)
 			return
 		}
-		err = service.Reserve(r.Context(), rr.ProductId, rr.Quantity, rr.OrderNumber)
+
+		var productsToReserve []stock.ProductToReserve
+
+		for _, v := range rr.Products {
+			productsToReserve = append(productsToReserve, stock.ProductToReserve{
+				ProductId: v.ProductId,
+				Quantity:  v.Quantity,
+			})
+		}
+
+		err = service.Reserve(r.Context(), productsToReserve, rr.OrderNumber)
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -131,9 +141,13 @@ func reserveHandler(service *stock.Service) http.HandlerFunc {
 }
 
 type ReserveRequest struct {
-	ProductId   uuid.UUID
 	OrderNumber uuid.UUID
-	Quantity    int
+	Products    []ReserveRequestProduct
+}
+
+type ReserveRequestProduct struct {
+	ProductId uuid.UUID
+	Quantity  int
 }
 
 // UnreserveStock godoc

@@ -18,13 +18,13 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
-const dbURL = "postgres://user:pass@localhost:5432/products"
+const dbURL = "postgres://postgres:mysecretpassword@localhost:5432/inventory"
 
 // @title ECommerce Inventory Management System
 // @version 1.0
 // @description ECommerce Inventory Management System used to add, reserve, unreserve and get stocks in your system
 
-// @host localhost:8080
+// @host localhost:3456
 // @BasePath /
 func main() {
 
@@ -51,12 +51,12 @@ func main() {
 	r.Mount("/api/stock", handlers.StockRoutes(ss))
 
 	r.Get("/swagger/*", httpSwagger.Handler(
-		httpSwagger.URL("http://localhost:8080/swagger/doc.json"), //The url pointing to API definition
+		httpSwagger.URL("http://localhost:3456/swagger/doc.json"), //The url pointing to API definition
 	))
 
 	consumers.ListenToProductEvents(ctx, pd)
 
-	err = http.ListenAndServe(":8080", r)
+	err = http.ListenAndServe(":3456", r)
 	if err != nil {
 		log.Fatal(err)
 	}

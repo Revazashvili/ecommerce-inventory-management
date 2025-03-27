@@ -99,11 +99,16 @@ func (ss *Service) Unreserve(ctx context.Context, orderNumber uuid.UUID) error {
 	})
 }
 
-func (ss *Service) Reserve(ctx context.Context, productID uuid.UUID, quantity int, orderNumber uuid.UUID) error {
+type ProductToReserve struct {
+	ProductId uuid.UUID
+	Quantity  int
+}
+
+func (ss *Service) Reserve(ctx context.Context, products []ProductToReserve, orderNumber uuid.UUID) error {
 	return ss.s.ExecWithTx(ctx, func(q sd.Querier) error {
 		sre, err := q.StockReservationExists(ctx, orderNumber)
 
-		if err != nil {
+		if err != nil && err != pgx.ErrNoRows {
 			return err
 		}
 
@@ -111,36 +116,42 @@ func (ss *Service) Reserve(ctx context.Context, productID uuid.UUID, quantity in
 			return errors.New("reservation for order number already exists")
 		}
 
-		s, err := q.GetStock(ctx, productID)
+		for _, v := range products {
+			s, err := q.GetStock(ctx, v.ProductId)
 
-		if err != nil {
-			return err
+			if err != nil && err != pgx.ErrNoRows {
+				return err
+			}
+
+			quantity := int32(v.Quantity)
+
+			if (s.Stock.Quantity - s.Stock.ReservedQuantity) < quantity {
+				return errors.New("not enough available quantity")
+			}
+
+			err = q.AddStockReservation(ctx, sd.AddStockReservationParams{
+				ID:          uuid.New(),
+				ProductID:   v.ProductId,
+				OrderNumber: orderNumber,
+				Quantity:    quantity,
+				CreateDate:  time.Now(),
+			})
+
+			if err != nil {
+				return err
+			}
+
+			err = q.UpdateStockReserve(ctx, sd.UpdateStockReserveParams{
+				ID:               s.Stock.ID,
+				Version:          s.Stock.Version,
+				Reservedquantity: s.Stock.ReservedQuantity + quantity,
+			})
+
+			if err != nil {
+				return err
+			}
 		}
 
-		aq := int(s.Stock.Quantity - s.Stock.ReservedQuantity)
-
-		if aq < quantity {
-			return errors.New("not enought available quantity")
-		}
-
-		err = q.AddStockReservation(ctx, sd.AddStockReservationParams{
-			ID:          uuid.New(),
-			ProductID:   productID,
-			OrderNumber: orderNumber,
-			Quantity:    int32(quantity),
-			CreateDate:  time.Now(),
-		})
-
-		if err != nil {
-			return err
-		}
-
-		err = q.UpdateStockReserve(ctx, sd.UpdateStockReserveParams{
-			ID:               s.Stock.ID,
-			Version:          s.Stock.Version,
-			Reservedquantity: int32(s.Stock.ReservedQuantity + int32(quantity)),
-		})
-
-		return err
+		return nil
 	})
 }
