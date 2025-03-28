@@ -7,13 +7,14 @@ import (
 
 	pd "github.com/Revazashvili/ecommerce-inventory-management/product/database"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
+	"github.com/google/uuid"
 )
 
 const (
 	broker = "localhost:29092"
 )
 
-var topics = []string{"products.ProductAddedEvent", "products.ProductNameUpdatedEvent"}
+var topics = []string{"products.ProductAdded", "products.ProductNameUpdated"}
 
 func ListenToProductEvents(ctx context.Context, q *pd.Queries) {
 	go listenForEvent(ctx, q)
@@ -53,7 +54,7 @@ func listenForEvent(ctx context.Context, q *pd.Queries) {
 				continue
 			}
 
-			var p pd.Product
+			var p ProductEvent
 
 			err = json.Unmarshal(message.Value, &p)
 
@@ -62,14 +63,17 @@ func listenForEvent(ctx context.Context, q *pd.Queries) {
 				continue
 			}
 
-			if *message.TopicPartition.Topic == "products.ProductAddedEvent" {
-				err := q.Insert(ctx, pd.InsertParams(p))
+			if *message.TopicPartition.Topic == "products.ProductAdded" {
+				err := q.Insert(ctx, pd.InsertParams(pd.InsertParams{
+					ID:   p.ProductId,
+					Name: p.ProductName,
+				}))
 				if err != nil {
 					log.Println(err)
 					continue
 				}
 			} else {
-				err := q.Update(ctx, pd.UpdateParams{ID: p.ID, Name: p.Name})
+				err := q.Update(ctx, pd.UpdateParams{ID: p.ProductId, Name: p.ProductName})
 				if err != nil {
 					log.Println(err)
 					continue
@@ -78,4 +82,9 @@ func listenForEvent(ctx context.Context, q *pd.Queries) {
 
 		}
 	}
+}
+
+type ProductEvent struct {
+	ProductId   uuid.UUID
+	ProductName string
 }
