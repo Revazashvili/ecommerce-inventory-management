@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Revazashvili/ecommerce-inventory-management/internal"
 	"github.com/Revazashvili/ecommerce-inventory-management/stock"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -122,14 +123,12 @@ func reserveHandler(service *stock.Service) http.HandlerFunc {
 			return
 		}
 
-		var productsToReserve []stock.ProductToReserve
-
-		for _, v := range rr.Products {
-			productsToReserve = append(productsToReserve, stock.ProductToReserve{
-				ProductId: v.ProductId,
-				Quantity:  v.Quantity,
-			})
-		}
+		productsToReserve := internal.Map(rr.Products, func(rrp ReserveRequestProduct) stock.ProductToReserve {
+			return stock.ProductToReserve{
+				ProductId: rrp.ProductId,
+				Quantity:  rrp.Quantity,
+			}
+		})
 
 		err = service.Reserve(r.Context(), productsToReserve, rr.OrderNumber)
 
