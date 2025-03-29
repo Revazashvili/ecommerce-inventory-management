@@ -25,6 +25,7 @@ This repository demonstrates a basic inventory management system for e-commerce 
 * Kafka
 * Chi for router
 * Sqlc for working with postgres
+* Swaggo for generating swagger docs
 
 
 ## Usage
